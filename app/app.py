@@ -1,15 +1,41 @@
 # app/app.py
-from flask import Flask, request, jsonify
 import torch
+from flask import Flask, request, jsonify
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
 # Load the fine-tuned model and tokenizer
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "model")
-tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
-model = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH)
+
+
+def load_model():
+    if not os.path.exists(MODEL_PATH) or not os.path.exists(
+        os.path.join(MODEL_PATH, "config.json")
+    ):
+        logger.error(
+            f"Model not found at {MODEL_PATH}. Please train the model first using train.py"
+        )
+        # Fall back to the base model if trained model isn't available
+        logger.info("Loading base legal-bert model instead...")
+        return AutoTokenizer.from_pretrained(
+            "nlpaueb/legal-bert-base-uncased"
+        ), AutoModelForSequenceClassification.from_pretrained(
+            "nlpaueb/legal-bert-base-uncased", num_labels=2
+        )
+
+    logger.info(f"Loading model from {MODEL_PATH}")
+    return AutoTokenizer.from_pretrained(
+        MODEL_PATH
+    ), AutoModelForSequenceClassification.from_pretrained(MODEL_PATH)
+
+
+tokenizer, model = load_model()
 model.eval()
 
 
