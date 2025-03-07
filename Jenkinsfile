@@ -1,65 +1,39 @@
-// Jenkinsfile
 pipeline {
     agent any
-
+    
     environment {
-        DOCKER_IMAGE = "huzi0906/legal-doc-analyzer:${env.BUILD_NUMBER}"
+        DOCKER_IMAGE = 'legal-doc-analyzer'
+        DOCKER_TAG = "${BUILD_NUMBER}"
+        DOCKERHUB_CREDENTIALS = credentials('docker-hub-credentials')
     }
-
+    
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-        stage('Install Dependencies & Lint') {
-            steps {
-                sh 'pip install flake8'
-                sh 'flake8 .'
-            }
-        }
-        stage('Run Tests') {
-            steps {
-                // Ensure tests run from the correct directory
-                sh 'pip install -r app/requirements.txt'
-                sh 'pip install pytest'
-                sh 'pytest tests/'
-            }
-        }
         stage('Build Docker Image') {
             steps {
                 script {
-                    dockerImage = docker.build("${DOCKER_IMAGE}")
+                    sh """
+                        docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                        docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKERHUB_CREDENTIALS_USR}/${DOCKER_IMAGE}:${DOCKER_TAG}
+                    """
                 }
             }
         }
-        stage('Push to Docker Hub') {
+        
+        stage('Push to DockerHub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASS')]) {
-                    sh "echo $DOCKERHUB_PASS | docker login -u $DOCKERHUB_USER --password-stdin"
-                    sh "docker push ${DOCKER_IMAGE}"
+                script {
+                    sh """
+                        echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin
+                        docker push ${DOCKERHUB_CREDENTIALS_USR}/${DOCKER_IMAGE}:${DOCKER_TAG}
+                    """
                 }
-            }
-        }
-        stage('Deploy') {
-            steps {
-                // Deploy your Docker container to your production server
-                // This could be a simple docker run command on a remote host
-                echo 'Deploying the Docker container...'
             }
         }
     }
+    
     post {
-        success {
-            // Send admin notification (e.g., via email)
-            mail to: 'admin@example.com',
-                 subject: "Deployment Success - Build ${env.BUILD_NUMBER}",
-                 body: "The legal document analyzer has been successfully deployed."
-        }
-        failure {
-            mail to: 'admin@example.com',
-                 subject: "Deployment Failed - Build ${env.BUILD_NUMBER}",
-                 body: "There was an error in the deployment process."
+        always {
+            sh 'docker logout'
         }
     }
 }
