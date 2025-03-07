@@ -1,4 +1,3 @@
-# model/train.py
 import json
 import os
 import torch
