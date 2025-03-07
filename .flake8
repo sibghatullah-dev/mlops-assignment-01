@@ -1,0 +1,11 @@
+[flake8]
+max-line-length = 100
+exclude = 
+    .git,
+    __pycache__,
+    build,
+    dist,
+    *.egg-info
+per-file-ignores =
+    # Allow __init__.py files to be empty
+    __init__.py:F401

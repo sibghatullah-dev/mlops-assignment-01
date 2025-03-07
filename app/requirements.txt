@@ -1,3 +1,5 @@
 Flask
 torch
 transformers
+flake8
+pytest
