@@ -1,0 +1,34 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+    types: [ closed ]
+
+jobs:
+  trigger-jenkins:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event.pull_request.merged == true)
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Trigger Jenkins Job
+      run: |
+        curl -X POST \
+          -u ${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_TOKEN }} \
+          "${{ secrets.JENKINS_URL }}/job/legal-doc-analyzer-deploy/build" \
+          --data-urlencode json='{"parameter": [{"name":"BRANCH", "value":"'${{ github.ref_name }}'"}]}'
+      env:
+        JENKINS_URL: ${{ secrets.JENKINS_URL }}
+        JENKINS_USER: ${{ secrets.JENKINS_USER }}
+        JENKINS_TOKEN: ${{ secrets.JENKINS_TOKEN }}
+        
+    - name: Notify Success
+      if: success()
+      run: |
+        echo "Successfully triggered Jenkins deployment job"
+        echo "Jenkins URL: ${{ secrets.JENKINS_URL }}/job/legal-doc-analyzer-deploy/"

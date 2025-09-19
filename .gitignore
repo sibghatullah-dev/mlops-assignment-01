@@ -1,4 +1,5 @@
 .venv/
+venv/
 __pycache__/
 
 /data/*
@@ -42,7 +43,22 @@ wheels/
 # Model files and logs
 results/
 logs/
+# Exclude all large model and training files
 *.pt
 *.pth
+*.safetensors
+*.bin
 *.ckpt
 /app/model
+
+# Only allow very small test files
+!tests/**/*.pt
+!tests/fixtures/*.pt
+!tests/**/*.pth
+!tests/fixtures/*.pth
+
+# Setup and documentation guides (exclude from repository)
+COMPLETE_SETUP_GUIDE.md
+CODE_MIGRATION_GUIDE.md
+QUICK_START.md
+BRANCH_PROTECTION_SETUP.md

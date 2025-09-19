@@ -69,7 +69,7 @@ def save_model(trainer, model, tokenizer):
 
 def main():
     data_file = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "data", "CUAD_v1", "CUAD_v1.json")
+        os.path.join(os.path.dirname(__file__), "..", "data", "CUADv1.json")
     )
     logger.info(f"Loading data from: {data_file}")
     texts, labels = load_data(data_file)
@@ -112,7 +112,7 @@ def main():
         num_train_epochs=3,
         per_device_train_batch_size=8,
         per_device_eval_batch_size=8,
-        evaluation_strategy="epoch",
+        eval_strategy="epoch",
         save_steps=10_000,
         save_total_limit=2,
         logging_dir="./logs",
