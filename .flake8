@@ -1,11 +1,25 @@
-[flake8]
-max-line-length = 100
-exclude = 
-    .git,
-    __pycache__,
-    build,
-    dist,
-    *.egg-info
-per-file-ignores =
-    # Allow __init__.py files to be empty
-    __init__.py:F401
+name: Lint (flake8)
+
+on:
+  push:
+    branches: [ "dev" ]
+  pull_request:
+    branches: [ "dev" ]
+
+jobs:
+  flake8:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies & flake8
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f app/requirements.txt ]; then pip install -r app/requirements.txt; fi
+          pip install flake8
+      - name: Run flake8
+        run: |
+          flake8 . --max-line-length=120
